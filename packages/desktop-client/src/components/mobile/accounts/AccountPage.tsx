@@ -17,6 +17,7 @@ import { MobileBackButton } from '#components/mobile/MobileBackButton';
 import { AddTransactionButton } from '#components/mobile/transactions/AddTransactionButton';
 import { MobilePageHeader, Page } from '#components/Page';
 import { useAccount } from '#hooks/useAccount';
+import { useNavigate } from '#hooks/useNavigate';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import {
   collapseModals,
@@ -35,10 +36,29 @@ export function AccountPage() {
   const [_numberFormat] = useSyncedPref('numberFormat');
   const numberFormat = _numberFormat || 'comma-dot';
   const [hideFraction] = useSyncedPref('hideFraction');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isReconciling = !Number.isNaN(
+    parseInt(searchParams.get('reconcile') ?? '', 10),
+  );
 
   const { id: accountIdParam } = useParams();
 
   const account = useAccount(accountIdParam || '');
+
+  const onBack = useCallback(() => {
+    if (isReconciling) {
+      setSearchParams(
+        prev => {
+          prev.delete('reconcile');
+          return prev;
+        },
+        { replace: true },
+      );
+    } else {
+      void navigate(-1);
+    }
+  }, [isReconciling, navigate, setSearchParams]);
 
   const nameFromId = useCallback(
     (id: string | undefined) => {
@@ -71,7 +91,7 @@ export function AccountPage() {
               <NameOnlyHeader name={nameFromId(accountIdParam)} />
             )
           }
-          leftContent={<MobileBackButton />}
+          leftContent={<MobileBackButton onPress={onBack} />}
           rightContent={<AddTransactionButton accountId={account?.id} />}
         />
       }
@@ -151,10 +171,13 @@ function AccountHeader({ account }: { readonly account: AccountEntity }) {
           options: {
             accountId: account.id,
             onReconcile: (amount: number) => {
-              setSearchParams(prev => {
-                prev.set('reconcile', String(amount));
-                return prev;
-              });
+              setSearchParams(
+                prev => {
+                  prev.set('reconcile', String(amount));
+                  return prev;
+                },
+                { replace: true },
+              );
               dispatch(
                 collapseModals({
                   rootModalName: 'account-menu',
