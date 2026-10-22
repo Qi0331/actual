@@ -63,6 +63,25 @@ test.describe('Mobile Accounts', () => {
     await expect(page).toMatchThemeScreenshots();
   });
 
+  test('back exits reconciliation without leaving the account', async () => {
+    const accountsPage = await navigation.goToAccountsPage();
+    await accountsPage.waitFor();
+
+    const accountPage = await accountsPage.openNthAccount(0);
+    await accountPage.waitFor();
+
+    await accountPage.startReconciliation('200.00');
+    await expect(accountPage.reconcilingBannerDifference).toBeVisible();
+
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(accountPage.reconcilingBanner).not.toBeVisible();
+    await expect(accountPage.transactionList).toBeVisible();
+    await expect(page).not.toHaveURL(/reconcile=/);
+
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/accounts$/);
+  });
+
   test('reconciles an account', async () => {
     const accountsPage = await navigation.goToAccountsPage();
     await accountsPage.waitFor();
@@ -86,5 +105,8 @@ test.describe('Mobile Accounts', () => {
 
     await accountPage.lockTransactions();
     await expect(accountPage.reconcilingBanner).not.toBeVisible();
+
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/accounts$/);
   });
 });
