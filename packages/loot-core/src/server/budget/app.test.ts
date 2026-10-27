@@ -11,6 +11,17 @@ describe('category-update', () => {
     vi.clearAllMocks();
   });
 
+  it.each([null, ''])('rejects an explicitly empty group (%s) without writing to the database', async group => {
+    await expect(
+      app.handlers['category-update']({
+        id: 'category-id',
+        group,
+      } as Parameters<(typeof app.handlers)['category-update']>[0]),
+    ).rejects.toThrow('Updating a category: groupId cannot be empty');
+
+    expect(db.updateCategory).not.toHaveBeenCalled();
+  });
+
   it('does not require a name, since the API types fields as a Partial', async () => {
     // api/category-update spreads the caller's partial straight through, so a
     // caller changing only the group never sends `name`. Trimming it
