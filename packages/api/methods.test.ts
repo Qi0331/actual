@@ -251,6 +251,44 @@ describe('API CRUD operations', () => {
     );
   });
 
+  test('Categories: refuse null or empty groups without orphaning the category', async () => {
+    const groupId = await api.createCategoryGroup({ name: 'orphan-guard-group' });
+    const categoryId = await api.createCategory({
+      name: 'orphan-guard-category',
+      group_id: groupId,
+    });
+
+    for (const invalidGroupId of [null, '']) {
+      await expect(
+        api.updateCategory(categoryId, {
+          group_id: invalidGroupId,
+        } as never),
+      ).rejects.toThrow('Updating a category: groupId cannot be empty');
+    }
+
+    // A rejected update must leave the category visible in its original group.
+    expect(await api.getCategories()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: categoryId,
+          group_id: groupId,
+        }),
+      ]),
+    );
+
+    // An omitted group is different from an explicitly empty one.
+    await api.updateCategory(categoryId, { hidden: true });
+    expect(await api.getCategories()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: categoryId,
+          group_id: groupId,
+          hidden: true,
+        }),
+      ]),
+    );
+  });
+
   // apis: createCategory, getCategories, updateCategory, deleteCategory
   test('Categories: successfully update categories', async () => {
     const month = '2023-10';
