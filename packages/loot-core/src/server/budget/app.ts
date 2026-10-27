@@ -331,6 +331,12 @@ async function createCategory({
 
 async function updateCategory(category: CategoryEntity): Promise<void> {
   try {
+    // Unlike an omitted group on a partial update, an explicitly empty group
+    // would orphan this category and make it disappear from getCategories().
+    if (category.group === null || category.group === '') {
+      throw APIError('Updating a category: groupId cannot be empty');
+    }
+
     // The API types `fields` as a Partial, and db.update() only writes the
     // keys it is given, so a partial that omits `name` must stay omitted
     // rather than being trimmed into a TypeError (#8857).
