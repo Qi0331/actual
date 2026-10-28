@@ -262,6 +262,8 @@ describe('API CRUD operations', () => {
       await expect(
         api.updateCategory(categoryId, {
           group_id: invalidGroupId,
+          name: 'should-not-be-written',
+          hidden: true,
         } as never),
       ).rejects.toThrow('Updating a category: groupId cannot be empty');
     }
@@ -272,10 +274,14 @@ describe('API CRUD operations', () => {
         expect.objectContaining({
           id: categoryId,
           group_id: groupId,
+          name: 'orphan-guard-category',
+          hidden: false,
         }),
       ]),
     );
 
+    // A rejected group change must not partially apply the accompanying
+    // name/hidden fields either (one atomic category-update operation).
     // An omitted group is different from an explicitly empty one.
     await api.updateCategory(categoryId, { hidden: true });
     expect(await api.getCategories()).toEqual(
