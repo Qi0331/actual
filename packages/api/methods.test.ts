@@ -293,6 +293,23 @@ describe('API CRUD operations', () => {
         }),
       ]),
     );
+
+    // Moving by group ID alone must not require a name in the partial
+    // update, and must preserve the existing name and hidden flag (#8856).
+    const destinationGroupId = await api.createCategoryGroup({
+      name: 'orphan-guard-destination',
+    });
+    await api.updateCategory(categoryId, { group_id: destinationGroupId });
+    expect(await api.getCategories()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: categoryId,
+          group_id: destinationGroupId,
+          name: 'orphan-guard-category',
+          hidden: true,
+        }),
+      ]),
+    );
   });
 
   // apis: createCategory, getCategories, updateCategory, deleteCategory
