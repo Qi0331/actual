@@ -32,6 +32,6 @@ test.skipIf(!builtDesktopFile)(
     const entry = readFileSync(builtDesktopFile!, 'utf8');
     assert.match(entry, /^\[Desktop Entry\]\s*$/m);
     const match = entry.match(/^StartupWMClass=(.*)\s*$/m);
-    assert.equal(match?.[1].trim(), packageJson.build.linux.executableName);
+    assert.equal(match?.[1]?.trim(), packageJson.build.linux.executableName);
   },
 );
