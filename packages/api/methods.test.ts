@@ -251,6 +251,25 @@ describe('API CRUD operations', () => {
     );
   });
 
+  test('Categories: creation refuses a missing group without persisting an orphan', async () => {
+    const name = 'invalid-create-without-group';
+    for (const groupId of [null, '']) {
+      await expect(
+        api.createCategory({ name, group_id: groupId } as never),
+      ).rejects.toThrow('Creating a category: groupId is required');
+    }
+
+    // A failed create must not leave an invisible row that later prevents
+    // creating a valid category with the same unique name (#8856).
+    const groupId = await api.createCategoryGroup({ name: 'valid-create-group' });
+    const categoryId = await api.createCategory({ name, group_id: groupId });
+    expect(await api.getCategories()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: categoryId, name, group_id: groupId }),
+      ]),
+    );
+  });
+
   test('Categories: refuse null or empty groups without orphaning the category', async () => {
     const groupId = await api.createCategoryGroup({ name: 'orphan-guard-group' });
     const categoryId = await api.createCategory({
