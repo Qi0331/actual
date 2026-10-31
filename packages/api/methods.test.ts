@@ -253,7 +253,7 @@ describe('API CRUD operations', () => {
 
   test('Categories: creation refuses a missing group without persisting an orphan', async () => {
     const name = 'invalid-create-without-group';
-    for (const groupId of [null, '']) {
+    for (const groupId of [null, '', '   ']) {
       await expect(
         api.createCategory({ name, group_id: groupId } as never),
       ).rejects.toThrow('Creating a category: groupId is required');
@@ -277,7 +277,7 @@ describe('API CRUD operations', () => {
       group_id: groupId,
     });
 
-    for (const invalidGroupId of [null, '']) {
+    for (const invalidGroupId of [null, '', '   ']) {
       await expect(
         api.updateCategory(categoryId, {
           group_id: invalidGroupId,
