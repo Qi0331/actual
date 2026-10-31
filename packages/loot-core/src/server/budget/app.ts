@@ -317,7 +317,7 @@ async function createCategory({
   isIncome?: boolean;
   hidden?: boolean;
 }): Promise<CategoryEntity['id']> {
-  if (!groupId) {
+  if (!groupId || (typeof groupId === 'string' && groupId.trim() === '')) {
     throw APIError('Creating a category: groupId is required');
   }
 
@@ -333,7 +333,7 @@ async function updateCategory(category: CategoryEntity): Promise<void> {
   try {
     // Unlike an omitted group on a partial update, an explicitly empty group
     // would orphan this category and make it disappear from getCategories().
-    if (category.group === null || category.group === '') {
+    if (category.group === null || (typeof category.group === 'string' && category.group.trim() === '')) {
       throw APIError('Updating a category: groupId cannot be empty');
     }
 
